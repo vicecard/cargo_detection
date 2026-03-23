@@ -1,0 +1,11 @@
+[core]
+    autostage = true
+    remote = local
+['remote "local"']
+    url = ../../dvcstore
+['remote "akl_trainer"']
+    url = ssh://trainer@10.12.228.10/home/trainer/dvcstore
+    user = trainer
+    port = 22
+['remote "ml_training"']
+    url = ssh://dvc@10.12.55.5/mnt/dvc/cargo_detection
