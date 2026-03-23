@@ -1,0 +1,6 @@
+[submodule "machine_learning"]
+	path = machine_learning
+	url = ../machine_learning.git
+[submodule "data_io"]
+	path = data_io
+	url = ../data_io.git
