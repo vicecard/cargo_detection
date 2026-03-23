@@ -4,4 +4,17 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "data-io",
+    "machine-learning",
+]
+
+[tool.uv.workspace]
+members = [
+    "machine_learning",
+    "data_io/python",
+]
+
+[tool.uv.sources]
+machine-learning = { workspace = true, editable = true }
+data-io = { workspace = true, editable = true }
