@@ -66,8 +66,13 @@ if __name__ == "__main__":
     multiprocessing.set_start_method(method="spawn")
 
     output_path: Path = Path().absolute() / "evaluation_images" / "tuning_10_conf_10_iou_5"
-    main(model_path="model/version_0/checkpoints/XXX.ckpt",
+    main(model_path="retinanet_cargo_shipping_labels/version_0/checkpoints/epoch=20-step=17052.ckpt",
          dataset_name="data/datasets/coco/cargo_shipping_labels",
          output_path=output_path)
 
     print("Done!")
+
+    # best model:
+    # lightning_logs/retinanet_cargo_shipping_labels/version_0/checkpoints/epoch=20-step=17052.ckpt
+    # 0.46791714429855347
+    # {'map': tensor(0.5806), 'map_50': tensor(0.7923), 'map_75': tensor(0.6360), 'map_small': tensor(0.0825), 'map_medium': tensor(0.5288), 'map_large': tensor(0.7317), 'mar_1': tensor(0.1758), 'mar_10': tensor(0.6079), 'mar_100': tensor(0.6794), 'mar_small': tensor(0.1474), 'mar_medium': tensor(0.7070), 'mar_large': tensor(0.8338), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}

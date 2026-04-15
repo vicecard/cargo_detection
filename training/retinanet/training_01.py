@@ -25,8 +25,8 @@ def setup_training(datasets: dict[str, Subset],
     params = HyperParameters(
         network="retinanet",
         num_classes=num_classes,
-        n_epochs=150,
-        batch_size=10,
+        n_epochs=30,
+        batch_size=3,
         early_stopping=True,
     )
     model = ObjectDetector(
@@ -84,7 +84,7 @@ def main() -> None:
     # only medium precision needed (boosts training speed a little)
     torch.set_float32_matmul_precision("medium")
 
-    checkpoint_callback = train(model, dm, params, model_log_name="retinanet_cargo_shipping_labels_01")
+    checkpoint_callback = train(model, dm, params, model_log_name="retinanet_cargo_shipping_labels")
     with open("best_model.txt", "w") as f:
         f.write(checkpoint_callback.best_model_path)
         f.write("\n")
