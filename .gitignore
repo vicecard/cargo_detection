@@ -9,3 +9,5 @@ wheels/
 # Virtual environments
 .venv
 /data
+/lightning_logs
+/evaluation_images
