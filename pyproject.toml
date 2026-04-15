@@ -5,11 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "bidict>=0.23.1",
     "data-io",
     "dvc>=3.67.0",
     "dvc-ssh>=4.2.2",
     "machine-learning",
     "pytorch-lightning>=2.6.1",
+    "tensorboard>=2.20.0",
+    "tensorboardx>=2.6.5",
 ]
 
 [tool.uv.workspace]
