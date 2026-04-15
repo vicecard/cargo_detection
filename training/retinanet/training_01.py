@@ -84,7 +84,7 @@ def main() -> None:
     # only medium precision needed (boosts training speed a little)
     torch.set_float32_matmul_precision("medium")
 
-    checkpoint_callback = train(model, dm, params)
+    checkpoint_callback = train(model, dm, params, model_log_name="retinanet_cargo_shipping_labels_01")
     with open("best_model.txt", "w") as f:
         f.write(checkpoint_callback.best_model_path)
         f.write("\n")
