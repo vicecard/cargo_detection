@@ -28,4 +28,5 @@ data-io = { workspace = true, editable = true }
 [dependency-groups]
 dev = [
     "datumaro>=1.12.0",
+    "ipython>=9.12.0",
 ]
