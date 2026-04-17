@@ -53,7 +53,7 @@ def setup_training(datasets: dict[str, Subset],
 
 
 def main() -> None:
-    save_path: Path = Path().absolute() / "data" / "datasets" / "coco" / "akl_and_fiverr"
+    save_path: Path = Path().absolute() / "data" / "datasets" / "coco" / "merged"
 
     # create dataset
     transform_fns: T.Transform = T.Compose(
