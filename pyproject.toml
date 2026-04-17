@@ -24,3 +24,8 @@ members = [
 [tool.uv.sources]
 machine-learning = { workspace = true, editable = true }
 data-io = { workspace = true, editable = true }
+
+[dependency-groups]
+dev = [
+    "datumaro>=1.12.0",
+]
