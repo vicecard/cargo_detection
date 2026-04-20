@@ -65,14 +65,19 @@ def main(model_path: Path, dataset_name: str, output_path: Path) -> None:
 if __name__ == "__main__":
     multiprocessing.set_start_method(method="spawn")
 
-    output_path: Path = Path().absolute() / "evaluation_images" / "tuning_10_conf_10_iou_5"
-    main(model_path="retinanet_cargo_shipping_labels/version_0/checkpoints/epoch=20-step=17052.ckpt",
-         dataset_name="data/datasets/coco/cargo_shipping_labels",
+    output_path: Path = Path().absolute() / "evaluation_images" / "version_02"
+    main(model_path="retinanet_cargo_shipping_labels/version_1/checkpoints/epoch=26-step=12582.ckpt",
+         dataset_name="data/datasets/coco/merged",
          output_path=output_path)
 
     print("Done!")
 
     # best model:
+    # 1)
     # lightning_logs/retinanet_cargo_shipping_labels/version_0/checkpoints/epoch=20-step=17052.ckpt
     # 0.46791714429855347
     # {'map': tensor(0.5806), 'map_50': tensor(0.7923), 'map_75': tensor(0.6360), 'map_small': tensor(0.0825), 'map_medium': tensor(0.5288), 'map_large': tensor(0.7317), 'mar_1': tensor(0.1758), 'mar_10': tensor(0.6079), 'mar_100': tensor(0.6794), 'mar_small': tensor(0.1474), 'mar_medium': tensor(0.7070), 'mar_large': tensor(0.8338), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}
+    # 2)
+    # lightning_logs/retinanet_cargo_shipping_labels/version_1/checkpoints/epoch=26-step=12582.ckpt
+    # 0.3779895603656769
+    # {'map': tensor(0.4250), 'map_50': tensor(0.5598), 'map_75': tensor(0.4488), 'map_small': tensor(0.1510), 'map_medium': tensor(0.2038), 'map_large': tensor(0.5157), 'mar_1': tensor(0.2682), 'mar_10': tensor(0.4436), 'mar_100': tensor(0.4989), 'mar_small': tensor(0.1884), 'mar_medium': tensor(0.2306), 'mar_large': tensor(0.5866), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}

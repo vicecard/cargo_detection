@@ -728,7 +728,7 @@ wheels = [
 
 [[package]]
 name = "cvat-sdk"
-version = "2.22.0"
+version = "2.62.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "attrs" },
@@ -736,15 +736,13 @@ dependencies = [
     { name = "pillow" },
     { name = "platformdirs" },
     { name = "python-dateutil" },
-    { name = "setuptools" },
     { name = "tqdm" },
-    { name = "tuspy" },
     { name = "typing-extensions" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/16/a1/37d67dc732cc1fbf8cd8f26d4833c6face05951caf511231d6b80f4796fc/cvat_sdk-2.22.0.tar.gz", hash = "sha256:a08f31314f1134c7a11fdf2ead90468fddfa98ecd549b8f1773eceb934b85209", size = 236197, upload-time = "2024-11-11T13:58:31.624Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e1/45/90c39ce78d5b4d5a99018234f235a0bd8f7581f67f8c432d59ee1cb48b90/cvat_sdk-2.62.0.tar.gz", hash = "sha256:e81c7a2277541de9efd171c33eae5bfb88385d15d5ef4aff6fbdc14c152b6074", size = 240983, upload-time = "2026-04-02T12:22:23.199Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/13/77/17b1e4569d1074bb75d48bb9d945c9a23950b0efd4aa428613ae084eeea4/cvat_sdk-2.22.0-py3-none-any.whl", hash = "sha256:a7e2e89b6bbf523fa8f4be9b5d4fec37f73b00dd800cb83537cd3113f6ddaad1", size = 792132, upload-time = "2024-11-11T13:58:28.312Z" },
+    { url = "https://files.pythonhosted.org/packages/35/a8/b9c489834a3a106a32eaf9e983acd964bd0bde0cc56a1dcbee917ecb0857/cvat_sdk-2.62.0-py3-none-any.whl", hash = "sha256:8b8175b6c583f13d009be10f6a1dcc4320d917250e878c8e19ad1a43c2ae46b5", size = 785801, upload-time = "2026-04-02T12:22:20.796Z" },
 ]
 
 [[package]]
@@ -775,7 +773,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cvat-sdk", specifier = "==2.22.0" },
+    { name = "cvat-sdk", specifier = ">=2.62.0" },
     { name = "datumaro", specifier = ">=1.12.0" },
     { name = "pymongo", specifier = ">=4.16.0" },
     { name = "requests", specifier = ">=2.32.5" },
@@ -1278,15 +1276,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/70/b8/c6081521ff70afdff55cd9512b2220bbf4fa88804dae51d1b57b4b58ef32/funcy-2.0.tar.gz", hash = "sha256:3963315d59d41c6f30c04bc910e10ab50a3ac4a225868bfa96feed133df075cb", size = 537931, upload-time = "2023-03-28T06:22:46.764Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d5/08/c2409cb01d5368dcfedcbaffa7d044cc8957d57a9d0855244a5eb4709d30/funcy-2.0-py2.py3-none-any.whl", hash = "sha256:53df23c8bb1651b12f095df764bfb057935d49537a56de211b098f4c79614bb0", size = 30891, upload-time = "2023-03-28T06:22:42.576Z" },
-]
-
-[[package]]
-name = "future"
-version = "1.0.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a7/b2/4140c69c6a66432916b26158687e821ba631a4c9273c474343badf84d3ba/future-1.0.0.tar.gz", hash = "sha256:bd2968309307861edae1458a4f8a4f3598c03be43b97521076aebf5d94c07b05", size = 1228490, upload-time = "2024-02-21T11:52:38.461Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/da/71/ae30dadffc90b9006d77af76b393cb9dfbfc9629f339fc1574a1c52e6806/future-1.0.0-py3-none-any.whl", hash = "sha256:929292d34f5872e70396626ef385ec22355a1fae8ad29e1a734c3e43f9fbc216", size = 491326, upload-time = "2024-02-21T11:52:35.956Z" },
 ]
 
 [[package]]
@@ -3363,15 +3352,6 @@ wheels = [
 ]
 
 [[package]]
-name = "tinydb"
-version = "4.8.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a0/79/4af51e2bb214b6ea58f857c51183d92beba85b23f7ba61c983ab3de56c33/tinydb-4.8.2.tar.gz", hash = "sha256:f7dfc39b8d7fda7a1ca62a8dbb449ffd340a117c1206b68c50b1a481fb95181d", size = 32566, upload-time = "2024-10-12T15:24:01.13Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/78/17/853354204e1ca022d6b7d011ca7f3206c4f8faa3cc743e92609b49c1d83f/tinydb-4.8.2-py3-none-any.whl", hash = "sha256:f97030ee5cbc91eeadd1d7af07ab0e48ceb04aa63d4a983adbaca4cba16e86c3", size = 24888, upload-time = "2024-10-12T15:23:59.833Z" },
-]
-
-[[package]]
 name = "tomlkit"
 version = "0.14.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3518,22 +3498,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/35/f8/9c66bfc55361ec6d0e4040a0337fb5924ceb23de4648b8a81ae9d33b2b38/triton-3.6.0-cp313-cp313t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:d002e07d7180fd65e622134fbd980c9a3d4211fb85224b56a0a0efbd422ab72f", size = 188400296, upload-time = "2026-01-20T16:00:56.042Z" },
     { url = "https://files.pythonhosted.org/packages/df/3d/9e7eee57b37c80cec63322c0231bb6da3cfe535a91d7a4d64896fcb89357/triton-3.6.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:a17a5d5985f0ac494ed8a8e54568f092f7057ef60e1b0fa09d3fd1512064e803", size = 188273063, upload-time = "2026-01-20T16:01:07.278Z" },
     { url = "https://files.pythonhosted.org/packages/f6/56/6113c23ff46c00aae423333eb58b3e60bdfe9179d542781955a5e1514cb3/triton-3.6.0-cp314-cp314t-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:46bd1c1af4b6704e554cad2eeb3b0a6513a980d470ccfa63189737340c7746a7", size = 188397994, upload-time = "2026-01-20T16:01:14.236Z" },
-]
-
-[[package]]
-name = "tuspy"
-version = "0.2.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "certifi" },
-    { name = "future" },
-    { name = "requests" },
-    { name = "six" },
-    { name = "tinydb" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/8f/8c9b1022df0230acded29d8dfd3be2675653a53b3e00fdfe598309660118/tuspy-0.2.5.tar.gz", hash = "sha256:1f238f65d444c0688f57e1dd704d9aa11cf5747eec33669e917627150170b9b8", size = 10080, upload-time = "2021-06-04T23:16:20.028Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/03/13/a5d87dc357f7146d54cd9c46d0fa7e9c80357e4fab7cdbf8fda14b727ec0/tuspy-0.2.5-py3-none-any.whl", hash = "sha256:8ce106dd139ac77a097e8728f15f90d99df7408d9e67ac780ce44aefb9b5dd8d", size = 12615, upload-time = "2021-06-04T23:16:18.244Z" },
 ]
 
 [[package]]
