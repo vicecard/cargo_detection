@@ -29,7 +29,7 @@ def setup_training(datasets: dict[str, Subset],
         network="retinanet",
         num_classes=num_classes,
         n_epochs=150,
-        batch_size=10,
+        batch_size=7,
         early_stopping=True,
     )
     model = ObjectDetector(
