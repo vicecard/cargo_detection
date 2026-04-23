@@ -1,12 +1,16 @@
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterable, Iterator, Callable
+from collections.abc import Iterable, Iterator, Callable, Sequence, Mapping
 from tqdm import tqdm
+from random import sample
+from PIL import Image
 
 from dataclasses import dataclass, field
 from bidict import bidict
 
 from sklearn.metrics import confusion_matrix
+import cv2
+import numpy as np
 
 import torch
 from torch.utils.data import ConcatDataset
@@ -19,6 +23,7 @@ from machine_learning.object_detection.inference import infer_image
 from machine_learning.object_detection.datamodule import DataModule
 from machine_learning.object_detection.object_detector import ObjectDetector
 from machine_learning.object_detection.transformations.coco import collate_fn
+from machine_learning.object_detection.data_preparation import annotate_image
 
 import machine_learning.object_detection.utils as utils
 
@@ -153,6 +158,52 @@ def compute_detection_counts(
     return tp, fp, fn, len(results), matched_categories
 
 
+def save_random_inference_samples(
+    image_paths: Sequence[Path],
+    model: ObjectDetector,
+    device: torch.device,
+    label_dict: Mapping[int, str],
+    output_dir: Path,
+    num_images: int = 8,
+    conf_thres: float = 0.1,
+    model_image_size: tuple[int, int] | None = None,
+    iou_thres: float = 0.05,
+    nms_class_restricted: bool = False,
+) -> list[Path]:
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not image_paths:
+        return []
+
+    chosen: list[Path] = sample(list(image_paths), k=min(num_images, len(image_paths)))
+    saved_files: list[Path] = []
+
+    for img_path in chosen:
+        img: Image.Image = Image.open(img_path).convert("RGB")
+
+        boxes, labels, confs = infer_image(
+            image=img,
+            model=model,
+            device=device,
+            label_dict=label_dict,
+            conf_thres=conf_thres,
+            model_image_size=model_image_size,
+            iou_thres=iou_thres,
+            nms_class_restricted=nms_class_restricted,
+        )
+
+        annotated: np.ndarray = np.array(img)
+        if len(boxes) > 0:
+            info: list[str] = [f"{label}@{conf:.2f}" for label, conf in zip(labels, confs)]
+            annotated = annotate_image(annotated, info, boxes)
+
+        save_path = output_dir / f"{img_path.stem}_annotated.png"
+        cv2.imwrite(str(save_path), cv2.cvtColor(annotated, cv2.COLOR_RGB2BGR))
+        saved_files.append(save_path)
+
+    return saved_files
+
+
 def main() -> None:
     """Main function to run performance metrics calculations."""
     print("Calculating performance metrics...")
@@ -203,6 +254,25 @@ def main() -> None:
 
     testset: Subset = dm.test_dataset
 
+    image_dir: Path = Path("data/datasets/coco/merged_variant/images/ds1")
+    image_paths: list[Path] = (
+        list(image_dir.glob("*.jpg")) +
+        list(image_dir.glob("*.jpeg")) +
+        list(image_dir.glob("*.png"))
+    )
+
+    saved: list[Path] = save_random_inference_samples(
+        image_paths=image_paths,
+        model=detector,
+        device=device,
+        label_dict=label_dict,
+        output_dir=Path("tmp/random_inference"),
+        num_images=10,
+        conf_thres=0.1,
+        model_image_size=None,
+    )
+    print(saved)
+
     results: ResultsType = []
     for img, target in tqdm(testset, total=len(testset)):
         boxes, predictions, confidences = infer_image(
@@ -210,7 +280,7 @@ def main() -> None:
             model=detector,
             device=device,
             label_dict=label_dict,
-            conf_thres=0.1,
+            conf_thres=0.5,
             model_image_size=None,
             iou_thres=iou_thres,
         )
@@ -227,9 +297,9 @@ def main() -> None:
 
     tp, fp, fn, num_samples, matched_categories = compute_detection_counts(results, iou_thres=iou_thres)
 
-    print(f"True positive rate: {tp / num_samples}")
-    print(f"False positive rate: {fp / num_samples}")
-    print(f"False negative rate: {fn / num_samples}")
+    print(f"True positive rate: {tp}")
+    print(f"False positive rate: {fp}")
+    print(f"False negative rate: {fn}")
     print(f"Num samples: {num_samples}")
 
     y_pred = list(flatten_generator([cat.predicted for cat in matched_categories]))
@@ -243,3 +313,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
