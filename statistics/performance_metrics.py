@@ -1,12 +1,10 @@
 from pathlib import Path
-from collections.abc import Iterator
-from typing import Iterable, Callable, Any
+from typing import Any
+from collections.abc import Iterable, Iterator, Callable
 from tqdm import tqdm
-from PIL import Image
 
 from dataclasses import dataclass, field
 from bidict import bidict
-import numpy as np
 
 from sklearn.metrics import confusion_matrix
 
@@ -17,13 +15,10 @@ from torch.utils.data.dataset import Subset
 from torchvision.datasets.coco import CocoDetection
 from torchvision.ops import box_iou
 
-#from machine_learning.object_detection.inference import infer_image
+from machine_learning.object_detection.inference import infer_image
 from machine_learning.object_detection.datamodule import DataModule
 from machine_learning.object_detection.object_detector import ObjectDetector
 from machine_learning.object_detection.transformations.coco import collate_fn
-
-from machine_learning.object_detection.data_preparation import img_to_tensor
-from machine_learning.object_detection.model_helper import decode_output
 
 import machine_learning.object_detection.utils as utils
 
@@ -40,100 +35,122 @@ class MatchedCategories:
     ious: list[float] = field(default_factory=list)
 
 
-def match_categories(result: ResultType, ious: torch.Tensor, iou_thres: float) -> MatchedCategories:
-    values, indices = torch.max(ious, dim=1)
+def coco_bbox_to_xyxy(bbox: list[float]) -> list[float]:
+    x, y, w, h = bbox
+    return [x, y, x + w, y + h]
 
-    matched_categories: MatchedCategories = MatchedCategories()
 
-    for pred_idx, truth_idx in enumerate(indices):
-        iou: float = values[pred_idx].item()
-        if iou < iou_thres:
-            continue
+def flatten_generator[T](inpt: Iterable[T]) -> Iterator[T]:
+    for item in inpt:
+        if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+            yield from flatten_generator(item)
+        else:
+            yield item
 
-        matched_categories.predicted.append(result[0][1][pred_idx])
-        matched_categories.truth.append(result[1][1][truth_idx])
-        matched_categories.ious.append(iou)
 
-    return matched_categories
+def filter_results(results: ResultsType, compare_fn: Callable[[int, int], bool]) -> ResultsType:
+    return [
+        e for e in results
+        if len(e[0]) > 0 and len(e[1]) > 0 and compare_fn(len(e[0][1]), len(e[1][1]))
+    ]
+
+
+def match_predictions_to_truth(
+    predicted_boxes: list[list[float]],
+    predicted_labels: list[int],
+    truth_boxes: list[list[float]],
+    truth_labels: list[int],
+    iou_thres: float,
+) -> MatchedCategories:
+    """
+    Greedy one-to-one matching:
+    - each prediction can match only one truth
+    - each truth can be matched only once
+    - labels must match
+    - IoU must be >= iou_thres
+    """
+    if len(predicted_boxes) == 0 or len(truth_boxes) == 0:
+        return MatchedCategories()
+
+    preds = torch.tensor(predicted_boxes, dtype=torch.float32)
+    truths = torch.tensor(truth_boxes, dtype=torch.float32)
+    ious = box_iou(preds, truths)
+
+    matched = MatchedCategories()
+    used_truth_indices: set[int] = set()
+
+    for pred_idx in range(len(predicted_boxes)):
+        # best available truth for this prediction
+        best_truth_idx = -1
+        best_iou = 0.0
+
+        for truth_idx in range(len(truth_boxes)):
+            if truth_idx in used_truth_indices:
+                continue
+            if predicted_labels[pred_idx] != truth_labels[truth_idx]:
+                continue
+
+            iou_val = float(ious[pred_idx, truth_idx].item())
+            if iou_val > best_iou:
+                best_iou = iou_val
+                best_truth_idx = truth_idx
+
+        if best_truth_idx >= 0 and best_iou >= iou_thres:
+            used_truth_indices.add(best_truth_idx)
+            matched.predicted.append(predicted_labels[pred_idx])
+            matched.truth.append(truth_labels[best_truth_idx])
+            matched.ious.append(best_iou)
+
+    return matched
 
 
 def generate_matched_categories(detections: ResultsType, iou_thres: float) -> list[MatchedCategories]:
     matches: list[MatchedCategories] = []
 
     for result in detections:
-        bbs_pred_coords: list[list[float]] = [list(map(float, box)) for box in result[0][0]]
-        bbs_truth_coords: list[list[float]] = [box for box in result[1][0]]
+        pred_boxes_raw = result[0][0]
+        pred_labels = result[0][1]
+        truth_boxes_raw = result[1][0]
+        truth_labels = result[1][1]
 
-        bbs_preds: torch.Tensor = torch.tensor(bbs_pred_coords)
-        bbs_truths: torch.Tensor = torch.tensor(bbs_truth_coords)
+        pred_boxes: list[list[float]] = [list(map(float, box)) for box in pred_boxes_raw]
+        truth_boxes: list[list[float]] = [coco_bbox_to_xyxy(list(map(float, box))) for box in truth_boxes_raw]
 
-        if bbs_preds.shape[0] == 0 or bbs_truths.shape[0] == 0:
+        if len(pred_boxes) == 0 or len(truth_boxes) == 0:
             continue
 
-        ious: torch.Tensor = box_iou(bbs_preds, bbs_truths)
-        matches.append(match_categories(result, ious, iou_thres=iou_thres))
+        matches.append(
+            match_predictions_to_truth(
+                predicted_boxes=pred_boxes,
+                predicted_labels=pred_labels,
+                truth_boxes=truth_boxes,
+                truth_labels=truth_labels,
+                iou_thres=iou_thres,
+            )
+        )
 
     return matches
 
 
-# isn't that already factored out into a submodule?
-def flatten_generator[T](inpt: Iterable[T]) -> Iterator[T]:
-    for item in inpt:
-        if isinstance(item, Iterable):
-            yield from flatten_generator(item)
-        else:
-            yield item
+def compute_detection_counts(
+    results: ResultsType,
+    iou_thres: float,
+) -> tuple[int, int, int, int, list[MatchedCategories]]:
+    """
+    Returns:
+        true_positives, false_positives, false_negatives, num_samples, matched_categories
+    """
+    matched_categories = generate_matched_categories(results, iou_thres)
 
+    tp = sum(len(m.predicted) for m in matched_categories)
 
-def translate_bbox(bbox: list[float], scale_factors: tuple[int, int]) -> list[float]:
-    s_w, s_h = scale_factors
-    x, y, w, h = bbox
-    return [x * s_w, y * s_h, (x + w) * s_w, (y + h) * s_h]
+    total_preds = sum(len(result[0][0]) for result in results)
+    total_truths = sum(len(result[1][0]) for result in results)
 
+    fp = total_preds - tp
+    fn = total_truths - tp
 
-def filter_results(results: ResultsType, compare_fn: Callable[[int, int], bool]) -> ResultsType:
-    return list(filter(lambda e: len(e[0]) > 0 and len(e[1]) > 0 and compare_fn(len(e[0][1]), len(e[1][1])), results))
-
-
-def infer_image(img: Image.Image,
-                model: ObjectDetector,
-                device: torch.device,
-                label_dict: dict[int, str],
-                img_size: tuple[int, int],
-                conf_thres: float,
-                iou_thres: float = 0.05,
-                nms_class_restricted: bool = False) -> tuple[list[list[int]], list[str], list[float]]:
-    # return data structure:
-    # ([bboxes], [label names], [confidences])
-
-    # Suppress DeprecationWarning
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-
-    img: np.ndarray = np.array(img.resize(img_size, resample=Image.BILINEAR)) / 255.
-    img: torch.Tensor = img_to_tensor(img)
-
-    # Move input tensor to same device as model
-    img = img.to(device)
-
-    # make model predictions
-    # model expects batches of images, hence the unsqueeze()
-    outputs = model(img.unsqueeze(0))
-    output = outputs[0]  # model returns list of results
-
-    # decode output of model and apply
-    # thresholding values
-    bbs, confs, labels = decode_output(output,
-                                       label_dict,
-                                       to_list=False,
-                                       iou_thres=iou_thres,
-                                       nms_class_restricted=nms_class_restricted)
-    valid_detections = confs > conf_thres
-    bbs = bbs[valid_detections].tolist()
-    confs = confs[valid_detections].tolist()
-    labels = labels[valid_detections].tolist()
-
-    return bbs, labels, confs
+    return tp, fp, fn, len(results), matched_categories
 
 
 def main() -> None:
@@ -147,7 +164,6 @@ def main() -> None:
     images_root: Path = Path().absolute() / "data" / "datasets" / "coco" / dataset_name
     dataset_root: Path = images_root
 
-    img_size: tuple[int, int] = (1920, 1080)
     # threshold for detection matching between predictions and ground truth
     # if the iou is greater than this threshold, the detections areas are
     # considered matching candidates and (might) go into the calculation
@@ -173,7 +189,7 @@ def main() -> None:
     datasets = utils.partition_dataset(dataset, lengths=(0.7, 0.2, 0.1))
 
     dm: DataModule = DataModule(Path(),
-                                img_size=img_size,
+                                img_size=(0, 0),
                                 batch_size=16,
                                 train_transforms=None,
                                 **datasets,
@@ -186,53 +202,42 @@ def main() -> None:
     })
 
     testset: Subset = dm.test_dataset
-    # get original image dimensions
-    # to compute scaling factor
-    w, h = testset[0][0].size
-
-    s_w = img_size[0] / w
-    s_h = img_size[1] / h
 
     results: ResultsType = []
-    for img, target in tqdm(testset):
-        # TODO: adjust img_size properly! Boxes get aligned incorrectly otherwise.
-        # (Our images are of size (1920, 1080) _and_ (1080, 1920)
-        boxes, predictions, confidences = infer_image(img, detector, device, label_dict, img_size, conf_thres=0.1)
+    for img, target in tqdm(testset, total=len(testset)):
+        boxes, predictions, confidences = infer_image(
+            image=img,
+            model=detector,
+            device=device,
+            label_dict=label_dict,
+            conf_thres=0.1,
+            model_image_size=None,
+            iou_thres=iou_thres,
+        )
+
         predictions = [label_dict.inverse[pred] for pred in predictions]
+
         predicted: tuple[Any, ...] = (boxes, predictions, confidences)
-        truth: tuple[Any, ...] = ([translate_bbox(t["bbox"], (s_w, s_h)) for t in target],
-                                  [t["category_id"] for t in target])
+
+        truth_boxes_xyxy = [coco_bbox_to_xyxy(list(map(float, t["bbox"]))) for t in target]
+        truth_labels = [t["category_id"] for t in target]
+        truth: tuple[Any, ...] = (truth_boxes_xyxy, truth_labels)
+
         results.append((predicted, truth))
 
-    num_samples: int = len(results)
+    tp, fp, fn, num_samples, matched_categories = compute_detection_counts(results, iou_thres=iou_thres)
 
-    matched_detections: ResultsType = filter_results(results, lambda p, t: p == t)
-    num_matched_detections: int = len(matched_detections)
-    print(f"Ratio of matched detections: {num_matched_detections} / {num_samples}")
+    print(f"True positive rate: {tp / num_samples}")
+    print(f"False positive rate: {fp / num_samples}")
+    print(f"False negative rate: {fn / num_samples}")
+    print(f"Num samples: {num_samples}")
 
-    mismatched_detections: ResultsType = filter_results(results, lambda p, t: p != t)
-    num_mismatched_detections: int = len(mismatched_detections)
-    print(f"Ratio of mismatched detections: {num_mismatched_detections} / {num_samples}")
-
-    assert num_mismatched_detections + num_matched_detections == num_samples
-
-    fp_detections: ResultsType = filter_results(results, lambda p, t: p > t)
-    fn_detections: ResultsType = filter_results(results, lambda p, t: p < t)
-
-    num_fp_detections: int = len(fp_detections)
-    num_fn_detections: int = len(fn_detections)
-    print(f"Ratio of false positives: {num_fp_detections} / {num_samples}")
-    print(f"Ratio of false negatives: {num_fn_detections} / {num_samples}")
-
-    all_matched_categories: list[MatchedCategories] = generate_matched_categories(matched_detections, iou_thres)
-    all_matched_categories.extend(generate_matched_categories(mismatched_detections, iou_thres))
-
-    y_pred: list[int] = list(flatten_generator([cat.predicted for cat in all_matched_categories]))
-    y_true: list[int] = list(flatten_generator([cat.truth for cat in all_matched_categories]))
+    y_pred = list(flatten_generator([cat.predicted for cat in matched_categories]))
+    y_true = list(flatten_generator([cat.truth for cat in matched_categories]))
 
     assert len(y_pred) == len(y_true)
 
-    cm: np.ndarray = confusion_matrix(y_true, y_pred)
+    cm = confusion_matrix(y_true, y_pred)
     print(f"Confusion matrix:\n{cm}")
 
 
