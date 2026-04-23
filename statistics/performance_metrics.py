@@ -254,6 +254,12 @@ def main() -> None:
 
     testset: Subset = dm.test_dataset
 
+    total_labels: int = 0
+    for idx in testset.indices:
+        _, target = testset.dataset[idx]
+        total_labels += len(target)
+    print(total_labels)
+
     image_dir: Path = Path("data/datasets/coco/merged_variant/images/ds1")
     image_paths: list[Path] = (
         list(image_dir.glob("*.jpg")) +
@@ -280,9 +286,10 @@ def main() -> None:
             model=detector,
             device=device,
             label_dict=label_dict,
-            conf_thres=0.5,
+            conf_thres=0.7,
             model_image_size=None,
             iou_thres=iou_thres,
+            nms_class_restricted=True
         )
 
         predictions = [label_dict.inverse[pred] for pred in predictions]
@@ -297,9 +304,9 @@ def main() -> None:
 
     tp, fp, fn, num_samples, matched_categories = compute_detection_counts(results, iou_thres=iou_thres)
 
-    print(f"True positive rate: {tp}")
-    print(f"False positive rate: {fp}")
-    print(f"False negative rate: {fn}")
+    print(f"True positive rate: {tp / total_labels}")
+    print(f"False positive rate: {fp / total_labels}")
+    print(f"False negative rate: {fn / total_labels}")
     print(f"Num samples: {num_samples}")
 
     y_pred = list(flatten_generator([cat.predicted for cat in matched_categories]))
