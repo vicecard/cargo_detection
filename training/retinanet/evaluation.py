@@ -76,8 +76,8 @@ def main(model_path: Path, dataset_name: str, output_path: Path) -> None:
 if __name__ == "__main__":
     multiprocessing.set_start_method(method="spawn")
 
-    output_path: Path = Path().absolute() / "evaluation_images" / "version_04"
-    main(model_path=Path("retinanet_cargo_shipping_labels/version_3/checkpoints/epoch=9-step=10150.ckpt"),
+    output_path: Path = Path().absolute() / "evaluation_images" / "version_05"
+    main(model_path=Path("retinanet_cargo_shipping_labels/version_4/checkpoints/epoch=14-step=13320.ckpt"),
          dataset_name="data/datasets/coco/merged_variant",
          output_path=output_path)
 
@@ -100,3 +100,7 @@ if __name__ == "__main__":
     # lightning_logs/retinanet_cargo_shipping_labels/version_3/checkpoints/epoch=9-step=10150.ckpt
     # 0.6731032133102417
     # {'map': tensor(0.6582), 'map_50': tensor(0.8469), 'map_75': tensor(0.7247), 'map_small': tensor(0.1696), 'map_medium': tensor(0.5791), 'map_large': tensor(0.7479), 'mar_1': tensor(0.2738), 'mar_10': tensor(0.6694), 'mar_100': tensor(0.7444), 'mar_small': tensor(0.2427), 'mar_medium': tensor(0.7208), 'mar_large': tensor(0.8503), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}
+    # 5)
+    # lightning_logs/retinanet_cargo_shipping_labels/version_4/checkpoints/epoch=14-step=13320.ckpt
+    # 0.6538749933242798
+    # {'map': tensor(0.6573), 'map_50': tensor(0.8441), 'map_75': tensor(0.7297), 'map_small': tensor(0.1783), 'map_medium': tensor(0.5766), 'map_large': tensor(0.7612), 'mar_1': tensor(0.2739), 'mar_10': tensor(0.6682), 'mar_100': tensor(0.7445), 'mar_small': tensor(0.2577), 'mar_medium': tensor(0.7231), 'mar_large': tensor(0.8337), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}
