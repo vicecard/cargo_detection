@@ -22,7 +22,9 @@ def main(model_path: Path, dataset_name: str, output_path: Path) -> None:
     images_root: Path = Path(dataset_name)
     dataset_root: Path = images_root
 
-    detector = ObjectDetector.load_from_checkpoint(checkpoint_path=model_root, map_location=device)
+    # since pytorch 2.6 we need to set weights_only=False, if we want to
+    # unpickle things like optimizers, schedulers, etc.
+    detector = ObjectDetector.load_from_checkpoint(checkpoint_path=model_root, map_location=device, weights_only=False)
     print(detector)
 
     transform_fns: T.Transform = T.Compose(
@@ -76,8 +78,8 @@ def main(model_path: Path, dataset_name: str, output_path: Path) -> None:
 if __name__ == "__main__":
     multiprocessing.set_start_method(method="spawn")
 
-    output_path: Path = Path().absolute() / "evaluation_images" / "version_05"
-    main(model_path=Path("retinanet_cargo_shipping_labels/version_4/checkpoints/epoch=14-step=13320.ckpt"),
+    output_path: Path = Path().absolute() / "evaluation_images" / "version_06"
+    main(model_path=Path("retinanet_cargo_shipping_labels/version_5/checkpoints/epoch=22-step=20424.ckpt"),
          dataset_name="data/datasets/coco/merged_variant",
          output_path=output_path)
 
@@ -104,3 +106,7 @@ if __name__ == "__main__":
     # lightning_logs/retinanet_cargo_shipping_labels/version_4/checkpoints/epoch=14-step=13320.ckpt
     # 0.6538749933242798
     # {'map': tensor(0.6573), 'map_50': tensor(0.8441), 'map_75': tensor(0.7297), 'map_small': tensor(0.1783), 'map_medium': tensor(0.5766), 'map_large': tensor(0.7612), 'mar_1': tensor(0.2739), 'mar_10': tensor(0.6682), 'mar_100': tensor(0.7445), 'mar_small': tensor(0.2577), 'mar_medium': tensor(0.7231), 'mar_large': tensor(0.8337), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}
+    # 6)
+    # lightning_logs/retinanet_cargo_shipping_labels/version_5/checkpoints/epoch=22-step=20424.ckpt
+    # 0.6465703248977661
+    # {'map': tensor(0.6511), 'map_50': tensor(0.8343), 'map_75': tensor(0.7141), 'map_small': tensor(0.1623), 'map_medium': tensor(0.5635), 'map_large': tensor(0.7837), 'mar_1': tensor(0.2742), 'mar_10': tensor(0.6654), 'mar_100': tensor(0.7427), 'mar_small': tensor(0.5646), 'mar_medium': tensor(0.7224), 'mar_large': tensor(0.8589), 'map_per_class': tensor(-1.), 'mar_100_per_class': tensor(-1.), 'classes': tensor([1, 2], dtype=torch.int32)}
